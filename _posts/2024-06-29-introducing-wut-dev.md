@@ -23,4 +23,4 @@ I started wut.dev as a way to address some of these issues. At its core, wut.dev
 
 Wut.dev also addresses the issues above by providing additional tools and visualizations, such as the "Policy Coverage Map" that shows a single table of all SCPs and all accounts with green/red "covered" or "not covered" indicators. Wut.dev is in active development, so you can expect more features soon.
 
-Wut.dev is in beta, but you can get started today at [https://wut.dev](wut.dev). There is no sign in, no ads, no trackers, and no analytics.
+Wut.dev is in beta, but you can get started today at [wut.dev](https://wut.dev). There is no sign in, no ads, no trackers, and no analytics.
