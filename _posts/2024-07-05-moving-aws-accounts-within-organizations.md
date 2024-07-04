@@ -1,26 +1,27 @@
 ---
 layout: post
-title:  "Moving AWS Accounts Within An Organization"
+title:  "Moving AWS Accounts and OUs Within An Organization - Not So Simple"
 date:   2024-07-05 01:00:00 -0500
-image: assets/img/cover.png
+image: assets/img/move-aws-account.png
 tags: dev
+description: Operational and security considerations when moving AWS accounts and OUs within an Organization
 ---
 
-![Cover Image](/assets/img/cover.png "Cover")
+![Cover Image](/assets/img/move-aws-account.png "Cover")
 
 # Background
 
-AWS Organizations enables the management and organization of AWS accounts via a heirarchy of organizational units (OUs). OUs are essentially directories in a tree structure and accounts can reside in OUs up to five nested levels deep. These OUs also allow for policies (Service Control Policies - SCPs) to be applied to groups of accounts under the OU tree.
+AWS Organizations enables the management and organization of AWS accounts via a hierarchy of organizational units (OUs). OUs are essentially directories in a tree structure and accounts can reside in OUs up to five nested levels deep. These OUs also allow for policies (Service Control Policies - SCPs) to be applied to groups of accounts under the OU tree.
 
 As an example, a company using AWS Organizations may group their accounts under `dev,` `stage,` and `prod` OUs and use those groupings to apply different policies based on the environment type. Alternatively, OUs could reflect the organization of the business, such as "engineering," "security," "finance," and "product" groups. These concepts can even be combined, an an OU tree could look like: `Root > Product > Staging > Account A`.
 
 However they are structured, OUs are not static. They can be renamed, moved, and deleted according to the needs of the business. So to can the accounts under those OUs. There are many reasons why an OU or account may need to be moved, but some common examples include:
 * The account purpose has changed
-* The organization of the company may change, and accounts may need to be moved to accomodate such a re-org
-* The organization matures and begins creating more granular heirarchy for their accounts
+* The organization of the company may change, and accounts may need to be moved to accommodate such a re-org
+* The organization matures and begins creating more granular hierarchy for their accounts
 * Acquisitions (inbound or outbound) of parts of the business may require its infrastructure to be migrated elsewhere
 * Security considerations, such as creating tighter boundaries between OUs using policies
-* Cosmetic reasons, such as restructuring the OU heirarchy to make more sense to developers managing it
+* Cosmetic reasons, such as restructuring the OU hierarchy to make more sense to developers managing it
 
 Note: this post covers moving AWS accounts or OUs _within the same Organization_. For considerations when moving accounts to new Organizations, Houston Hopkins has written a good guide [here](https://gist.github.com/houey/fa1129edb2214f1d278010578ea29c18).
 
@@ -97,7 +98,7 @@ There are several condition keys that can lead to the issue described above:
 
 ### Global Uniqueness
 
-AWS guarantees that AWS Organization IDs (and their corresonding ARNs) are globally unique. However, OU IDs do not have the same guarantee (they are only unique within the same organization). When referencing an OU via the above condition keys, AWS recommends including the full path, including the Organization ID, to prevent a situation in which principals in an OU outside of your Organization are inadvertedly trusted.
+AWS guarantees that AWS Organization IDs (and their corresponding ARNs) are globally unique. However, OU IDs do not have the same guarantee (they are only unique within the same organization). When referencing an OU via the above condition keys, AWS recommends including the full path, including the Organization ID, to prevent a situation in which principals in an OU outside of your Organization are inadvertently trusted.
 
 For example:
 
@@ -156,7 +157,7 @@ Changing an account or OU parent ID is straightforward - a single configuration 
 However, for sensitive accounts, the challenges described above require a bit more investment in operational risk management. There are some steps developers can take to reduce the risk of these changes:
 
 * If possible, consider temporarily applying the SCPs attached to the target OU to the original OU or account to observe potential impacts to the application in a controlled environment
-* While not ideal, you can also consider temporarily moving the account or OU for increasing periods of time while monitoring for `AccessDenied` errors in CloudTrail. For example, you could update the `parent_id` to the new OU for 15 seconds, revert, monitor, update again for 5 minutes, etc. based on your risk tolerance.
+* While not ideal, you can also consider temporarily moving the account or OU for increasing periods of time while monitoring for `AccessDenied` errors in CloudTrail. For example, you could update the `parentId` to the new OU for 15 seconds, revert, monitor, update again for 5 minutes, etc. based on your risk tolerance.
     * Note: this strategy may result in in-scope CloudFormation StackSets being deployed and deleted in rapid succession which could cause other unintended side effects.
 * Consider using the checklist below to manually evaluate the impact of an account/OU move.
 
@@ -168,6 +169,9 @@ Following an account or OU move, errors will most likely appear in the following
 * Application Logs - access denied errors while attempting to access AWS resources controlled by resource policies (e.g., S3 buckets)
 * CloudFormation StackSet Logs - monitor the "Deployments" tab of any in-scope stack sets to ensure the stacks are deployed or deleted properly
 
+## Reverting
+Reverting the move involves simply changing the `parentId` back to the original parent. The majority of the above policy considerations should instantly revert back to how they were applied prior to the move. However, CloudFormation StackSets may need to be reviewed for possible cleanup, depending on their auto-deploy and retention settings.
+
 # Checklist
 
 The checklist below, while not exhaustive, contains a set of checks that can be performed prior to moving an AWS account or OU:
@@ -177,40 +181,9 @@ The checklist below, while not exhaustive, contains a set of checks that can be 
 - [ ] Will this move result in any new policies applying to the account due to any deltas in these policy attachments?
 - [ ] Will any CloudFormation StackSets targeting the account via its original parent OUs be deleted?
 - [ ] Will any CloudFormation StackSets targeting the account via its new parent OUs be deployed?
-- [ ] Do any IAM policies, trust relationships, etc. target by OU
+- [ ] Do any IAM policies, trust relationships, etc., in any AWS account within the Organization, target by OU? Does this OU include any of the original or new OU paths?
     - [ ] Grep your policies for the use of OU condition keys, including: `aws:PrincipalOrgPaths`, `aws:ResourceOrgPaths`, and `aws:SourceOrgPaths`
+- [ ] Do any RAM shares share resources based on OU? Does this OU include any of the original or new OU paths?
 
-
-* AWS Organizations
-* "move-account" API ()
-    * Referring to _intra-Organization_ moves
-    * 
-* Reasons to move accounts
-* OU-based sharing (e.g., RAM)
-* TODO: do any other controls/policies/etc. operate based on OU path references?
-
-# Considerations
-
-1. SCPs attached to the original parent OU tree
-1. SCPs attached to the new OU tree
-1. Policies (SCP, IAM, resource, etc.) that use "PrincipalOrgPaths" conditions
-1. StackSets - targeting an OU - will they be auto-removed or auto-deployed? This could unexpectedly delete, or deploy, infra
-1. RAM OU-based sharing
-1. VPC endpoint policies
-1. Control tower?
-1. Identity center?
-1. Cost/billing/limits?
-1. Other
-    1. Does AWS have any rate-limits or service limits based on OUs (even internally)?
-
-# What to Monitor
-1. Access denied errors spiking
-1. S3 access logs
-1. 
-
-# Reverting
-1. Easy to revert via the same "move-account" API call (just swap the parents)
-
-https://docs.aws.amazon.com/ram/latest/userguide/scp.html
 
 _This post was published by [wut.dev](https://wut.dev), a platform for managing AWS Organizations and Policies_.
