@@ -1,22 +1,26 @@
 ---
 layout: post
-title:  "Moving AWS Accounts and OUs Within An Organization - Not So Simple"
+title:  "Moving AWS Accounts and OUs Within An Organization - Not So Simple!"
 date:   2024-07-05 01:00:00 -0500
 image: assets/img/move-aws-account.png
 tags: dev
+author: fuller
 description: Operational and security considerations when moving AWS accounts and OUs within an Organization
+excerpt_separator: <!--more-->
 ---
 
-![Cover Image](/assets/img/move-aws-account.png "Cover")
+![Moving an AWS Account](/assets/img/move-aws-account.png "Moving an AWS Account")
 
 # Background
 
 AWS Organizations enables the management and organization of AWS accounts via a hierarchy of organizational units (OUs). OUs are essentially directories in a tree structure and accounts can reside in OUs up to five nested levels deep. These OUs also allow for policies (Service Control Policies - SCPs) to be applied to groups of accounts under the OU tree.
 
-As an example, a company using AWS Organizations may group their accounts under `dev,` `stage,` and `prod` OUs and use those groupings to apply different policies based on the environment type. Alternatively, OUs could reflect the organization of the business, such as "engineering," "security," "finance," and "product" groups. These concepts can even be combined, an an OU tree could look like: `Root > Product > Staging > Account A`.
+<!--more-->
+
+As an example, a company using AWS Organizations may group their accounts under `dev`, `stage`, and `prod` OUs and use those groupings to apply different policies based on the environment type. Alternatively, OUs could reflect the organization of the business, such as "engineering," "security," "finance," and "product" groups. These concepts can even be combined; an OU tree could look like: `Root > Product > Staging > Account A`.
 
 However they are structured, OUs are not static. They can be renamed, moved, and deleted according to the needs of the business. So to can the accounts under those OUs. There are many reasons why an OU or account may need to be moved, but some common examples include:
-* The account purpose has changed
+* The account's purpose has changed
 * The organization of the company may change, and accounts may need to be moved to accommodate such a re-org
 * The organization matures and begins creating more granular hierarchy for their accounts
 * Acquisitions (inbound or outbound) of parts of the business may require its infrastructure to be migrated elsewhere
@@ -56,30 +60,30 @@ Root > Product > Production > Account A
 * Policies applied to the `Staging` OU will no longer apply
 * Policies applied to the `Production` OU will begin to apply
 
-This may seem simple, but it's an important consideration because SCPs are global policies that have wide-ranging impact to the services running within the accounts to which they are applied. If an application in the `Staging` OU relies on `s3:GetObject` calls, and the `Production` OU has a `Deny` statement blocking those calls, then the application may begin experiencing `AccessDenied` errors.
+This may seem simple, but it's an important consideration because SCPs are global policies that have wide-ranging impact to the services running within the accounts to which they are applied. If an application in the `Staging` OU relies on `s3:GetObject` calls, and the `Production` OU has a `Deny` statement blocking those calls, then the application will begin experiencing `AccessDenied` errors.
 
 ## Policy References
 
-Aside from policies that are attached directly to the account, OU, or its parents, policies in other places can reference OU structure as a means of conditionally allowing or denying access. These include IAM policies, trust relationships, S3 bucket policies, VPC endpoint policies, and other resource policies.
+Aside from policies that are attached directly to the account, OU, or its parents, policies in other places can reference OU paths as a means of conditionally allowing or denying access. These include IAM policies, trust relationships, S3 bucket policies, VPC endpoint policies, and other resource policies.
 
 Consider the following IAM trust relationship policy, attached to an application's IAM role:
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-	{
-        "Effect": "Allow",
-        "Principal": {
-            "AWS": "*"
-        },
-		"Action": "sts:AssumeRole",
-		"Condition":{
-			"ForAnyValue:StringLike":{
-				"aws:PrincipalOrgPaths":["o-myorganization/*/ou-staging/"]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition":{
+                "ForAnyValue:StringLike":{
+                    "aws:PrincipalOrgPaths":["o-myorganization/*/ou-staging/"]
+                }
             }
-         }
-      }
+        }
    ]
 }
 ```
@@ -92,11 +96,11 @@ From a security standpoint, this policy also presents a risk because it delegate
 
 There are several condition keys that can lead to the issue described above:
 
-* [aws:PrincipalOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-principalorgpaths) - refers to the Organization path of the principal making the request
-* [aws:ResourceOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-resourceorgpaths) - refers to the Organization path of the resource targeted by the request
-* [aws:SourceOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourceorgpaths) - refers to the Organization path of the resource making a service-to-service request (only when made by an AWS service principal).
+* [aws:PrincipalOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-principalorgpaths) - refers to the Organization path of the _principal making the request_
+* [aws:ResourceOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-resourceorgpaths) - refers to the Organization path of the _resource targeted by the request_
+* [aws:SourceOrgPaths](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sourceorgpaths) - refers to the Organization path of the _resource making a service-to-service request_ (only when made by an AWS service principal)
 
-### Global Uniqueness
+### A Note on Global Uniqueness
 
 AWS guarantees that AWS Organization IDs (and their corresponding ARNs) are globally unique. However, OU IDs do not have the same guarantee (they are only unique within the same organization). When referencing an OU via the above condition keys, AWS recommends including the full path, including the Organization ID, to prevent a situation in which principals in an OU outside of your Organization are inadvertently trusted.
 
@@ -119,7 +123,7 @@ Policy allowing any access from principals in the OU with ID `ou-ab12-22222222` 
 
 ## CloudFormation StackSets
 
-CloudFormation stacks can be centrally deployed across multiple member accounts from the management account using the CloudFormation StackSets feature. The stack configuration controls which AWS accounts the stack is deployed in via "targets," which operate based on account or Organizational Unit ID.
+In an AWS Organization, CloudFormation stacks can be centrally deployed across multiple member accounts from the management account using the CloudFormation StackSets feature. The stack configuration controls which AWS accounts the stack is deployed in via "targets," which operate based on account or Organizational Unit ID.
 
 The [DeploymentTargets](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeploymentTargets.html) property of the CloudFormation StackSet can be set to any combination of account IDs and OU IDs. When an account is targeted, either directly via its ID, or indirectly via one of its parent OUs, the stack is deployed to that account.
 
@@ -152,11 +156,11 @@ This challenge is made more difficult by the fact that these policies can exist 
 
 # Change Management Strategies
 
-Changing an account or OU parent ID is straightforward - a single configuration option that can be changed via API or deployed via infrastructure-as-code rollouts (e.g., Terraform's `aws_organizations_account` [parent_id](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account#parent_id)).
+Changing an account or OU parent ID is straightforward; a single configuration option can be modified via API or deployed via infrastructure-as-code rollouts (e.g., Terraform's `aws_organizations_account` [parent_id](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account#parent_id)).
 
 However, for sensitive accounts, the challenges described above require a bit more investment in operational risk management. There are some steps developers can take to reduce the risk of these changes:
 
-* If possible, consider temporarily applying the SCPs attached to the target OU to the original OU or account to observe potential impacts to the application in a controlled environment
+* If possible, consider temporarily applying the same SCPs attached to the target OU to the original OU or account to observe potential impacts to the application in a controlled environment
 * While not ideal, you can also consider temporarily moving the account or OU for increasing periods of time while monitoring for `AccessDenied` errors in CloudTrail. For example, you could update the `parentId` to the new OU for 15 seconds, revert, monitor, update again for 5 minutes, etc. based on your risk tolerance.
     * Note: this strategy may result in in-scope CloudFormation StackSets being deployed and deleted in rapid succession which could cause other unintended side effects.
 * Consider using the checklist below to manually evaluate the impact of an account/OU move.
@@ -165,7 +169,7 @@ However, for sensitive accounts, the challenges described above require a bit mo
 
 Following an account or OU move, errors will most likely appear in the following places:
 
-* CloudTrail - `AccessDenied` errors referencing SCPs, such as `due to an explicit deny in a service control policy`
+* CloudTrail - `AccessDenied` errors referencing SCPs, with a message like `due to an explicit deny in a service control policy`
 * Application Logs - access denied errors while attempting to access AWS resources controlled by resource policies (e.g., S3 buckets)
 * CloudFormation StackSet Logs - monitor the "Deployments" tab of any in-scope stack sets to ensure the stacks are deployed or deleted properly
 
@@ -176,8 +180,8 @@ Reverting the move involves simply changing the `parentId` back to the original 
 
 The checklist below, while not exhaustive, contains a set of checks that can be performed prior to moving an AWS account or OU:
 
-- [ ] Which SCPs are attached to the account or OU and its original parents, up to the root?
-- [ ] Which SCPs are attached to the new OU and its parents?
+- [ ] Which SCPs are attached to the account or OU and its _original_ parents, up to the root?
+- [ ] Which SCPs are attached to the _new_ OU and its parents?
 - [ ] Will this move result in any new policies applying to the account due to any deltas in these policy attachments?
 - [ ] Will any CloudFormation StackSets targeting the account via its original parent OUs be deleted?
 - [ ] Will any CloudFormation StackSets targeting the account via its new parent OUs be deployed?
@@ -185,5 +189,6 @@ The checklist below, while not exhaustive, contains a set of checks that can be 
     - [ ] Grep your policies for the use of OU condition keys, including: `aws:PrincipalOrgPaths`, `aws:ResourceOrgPaths`, and `aws:SourceOrgPaths`
 - [ ] Do any RAM shares share resources based on OU? Does this OU include any of the original or new OU paths?
 
+----
 
 _This post was published by [wut.dev](https://wut.dev), a platform for managing AWS Organizations and Policies_.
