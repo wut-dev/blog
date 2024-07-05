@@ -3,12 +3,17 @@ layout: post
 title:  "Introducing Wut.Dev"
 date:   2024-06-29 01:00:00 -0500
 image: assets/img/cover.png
+author: fuller
+description: Wut.dev is an AWS Organization and SCP management platform
 tags: update
+excerpt_separator: <!--more-->
 ---
 
 ![Cover Image](/assets/img/cover.png "Cover")
 
 As cloud infrastructure usage continues to grow, it has become common (recommended) practice to organize the accounts that contain that infrastructure by team, project, region, environment, and other categories. This has led to a rapid expansion in the number of cloud accounts that many companies, and even individuals, are managing. Some companies have hundreds of accounts, and it's not uncommon to have _thousands_ of accounts.
+
+<!--more-->
 
 To help manage this sprawl, AWS long ago introduced "Organizations," as a service for its users. Organizations allows for the centralized management of AWS accounts. Accounts can be created, organized into logical groups ("units"), and deleted from a single management interface. Additionally, governance policies, called "Service Control Policies" (SCPs), can be applied to accounts, units, or the entire organization from the root.
 
