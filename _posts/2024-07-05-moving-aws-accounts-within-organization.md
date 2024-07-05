@@ -176,6 +176,10 @@ Following an account or OU move, errors will most likely appear in the following
 ## Reverting
 Reverting the move involves simply changing the `parentId` back to the original parent. The majority of the above policy considerations should instantly revert back to how they were applied prior to the move. However, CloudFormation StackSets may need to be reviewed for possible cleanup, depending on their auto-deploy and retention settings.
 
+### A Warning About StackSets
+
+Many organizations leverage StackSets to deploy shared resources, such as IAM roles, used by monitoring or security tools. Its important to note that when a role is deleted and recreated, some AWS services, such as KMS, may no longer trust the new role, even if it has the same name and ARN (the policy, depending on how it is written, may reference the now-deleted role via an `AROA` value). This is a security feature, but can cause complications when recovering stacks that have been deleted due to an account move. You can read more about this edge case [here](https://www.lastweekinaws.com/blog/the-sneaky-weakness-behind-aws-managed-kms-keys/).
+
 # Checklist
 
 The checklist below, while not exhaustive, contains a set of checks that can be performed prior to moving an AWS account or OU:
@@ -184,6 +188,7 @@ The checklist below, while not exhaustive, contains a set of checks that can be 
 - [ ] Which SCPs are attached to the _new_ OU and its parents?
 - [ ] Will this move result in any new policies applying to the account due to any deltas in these policy attachments?
 - [ ] Will any CloudFormation StackSets targeting the account via its original parent OUs be deleted?
+    - [ ] Will any deleted CloudFormation StackSets delete shared resources (such as IAM roles) that may need to be recovered?
 - [ ] Will any CloudFormation StackSets targeting the account via its new parent OUs be deployed?
 - [ ] Do any IAM policies, trust relationships, etc., in any AWS account within the Organization, target by OU? Does this OU include any of the original or new OU paths?
     - [ ] Grep your policies for the use of OU condition keys, including: `aws:PrincipalOrgPaths`, `aws:ResourceOrgPaths`, and `aws:SourceOrgPaths`
