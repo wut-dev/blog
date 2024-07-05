@@ -21,11 +21,12 @@ As an example, a company using AWS Organizations may group their accounts under 
 
 However they are structured, OUs are not static. They can be renamed, moved, and deleted according to the needs of the business. So to can the accounts under those OUs. There are many reasons why an OU or account may need to be moved, but some common examples include:
 * The account's purpose has changed
-* The organization of the company may change, and accounts may need to be moved to accommodate such a re-org
+* The organization of the company changed, and accounts may need to be moved to accommodate such a re-org
 * The organization matures and begins creating more granular hierarchy for their accounts
 * Acquisitions (inbound or outbound) of parts of the business may require its infrastructure to be migrated elsewhere
 * Security considerations, such as creating tighter boundaries between OUs using policies
 * Cosmetic reasons, such as restructuring the OU hierarchy to make more sense to developers managing it
+* As part of a pipeline when provisioning or deprovisioning accounts
 
 Note: this post covers moving AWS accounts or OUs _within the same Organization_. For considerations when moving accounts to new Organizations, Houston Hopkins has written a good guide [here](https://gist.github.com/houey/fa1129edb2214f1d278010578ea29c18).
 
@@ -148,7 +149,13 @@ This is a critically-important concept; moving an AWS account to a new OU can im
 
 Before moving an account, you can [review the set of resources shared with the account](https://docs.aws.amazon.com/ram/latest/userguide/working-with-shared-view-rs.html). For each resource, you should evaluate how the share was created. Resources shared directly with the account ID will not be impacted, while resources shared with the account by nature of its OU inheritance may.
 
-# Other Challenges
+## Control Tower Enrollments
+
+AWS Control Tower is a governance platform that can help manage and provision accounts in a multi-account environment and enforce specific governance controls within those accounts. Existing accounts can be added to or removed from Control Tower by enrolling/unenrolling the account directly, or by [registering an existing](https://docs.aws.amazon.com/controltower/latest/userguide/importing-existing.html) OU from the Organization.
+
+If you use Control Tower, and move an AWS account or OU under an OU that is enrolled in Control Tower, then that account, or all accounts under that OU, will be enrolled. This could have unexpected side effects, such as enabling governance controls that could impact running applications. There is some nuance to this, including differences in how preventative, detective, and proactive controls are enforced, so be sure to read through the [docs](https://docs.aws.amazon.com/controltower/latest/userguide/nested-ous.html#nested-ous-and-controls) for your specific configuration.
+
+## Other Challenges
 
 AWS does not provide a "dry run" or "plan" API for evaluating the potential impacts of moving an account within an Organization. The changes described above take effect immediately, so moving an account could result in instant `AccessDenied` errors as a result of newly applied policies, lost RAM shares, or no-longer-applicable trust relationships.
 
@@ -158,7 +165,7 @@ This challenge is made more difficult by the fact that these policies can exist 
 
 Changing an account or OU parent ID is straightforward; a single configuration option can be modified via API or deployed via infrastructure-as-code rollouts (e.g., Terraform's `aws_organizations_account` [parent_id](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_account#parent_id)).
 
-However, for sensitive accounts, the challenges described above require a bit more investment in operational risk management. There are some steps developers can take to reduce the risk of these changes:
+However, for operationally-sensitive accounts, the challenges described above require a bit more investment in operational risk management. There are some steps developers can take to reduce the risk of these changes:
 
 * If possible, consider temporarily applying the same SCPs attached to the target OU to the original OU or account to observe potential impacts to the application in a controlled environment
 * While not ideal, you can also consider temporarily moving the account or OU for increasing periods of time while monitoring for `AccessDenied` errors in CloudTrail. For example, you could update the `parentId` to the new OU for 15 seconds, revert, monitor, update again for 5 minutes, etc. based on your risk tolerance.
@@ -193,6 +200,7 @@ The checklist below, while not exhaustive, contains a set of checks that can be 
 - [ ] Do any IAM policies, trust relationships, etc., in any AWS account within the Organization, target by OU? Does this OU include any of the original or new OU paths?
     - [ ] Grep your policies for the use of OU condition keys, including: `aws:PrincipalOrgPaths`, `aws:ResourceOrgPaths`, and `aws:SourceOrgPaths`
 - [ ] Do any RAM shares share resources based on OU? Does this OU include any of the original or new OU paths?
+- [ ] Will moving the account or OU trigger any Control Tower enrollments that could begin enforcing governance controls on the account(s)?
 
 ----
 
