@@ -2,6 +2,7 @@
 layout: post
 title:  "Moving AWS Accounts and OUs Within An Organization - Not So Simple!"
 date:   2024-07-05 01:00:00 -0500
+thumbnail: assets/img/move-aws-account.png
 image: assets/img/move-aws-account.png
 tags: dev
 author: fuller

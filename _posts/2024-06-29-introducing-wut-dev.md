@@ -2,6 +2,7 @@
 layout: post
 title:  "Introducing Wut.Dev"
 date:   2024-06-29 01:00:00 -0500
+thumbnail: assets/img/cover.png
 image: assets/img/cover.png
 author: fuller
 description: Wut.dev is an AWS Organization and SCP management platform
