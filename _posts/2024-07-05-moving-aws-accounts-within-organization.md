@@ -91,7 +91,7 @@ Consider the following IAM trust relationship policy, attached to an application
 
 This trust relationship allows any entity from any account under the `ou-staging` OU to assume it. If part of your application workflow involves assuming this role, and the account performing the role assumption is moved from `ou-staging` to `ou-production`, then the condition will no longer pass and the assume role call will begin failing.
 
-From a security standpoint, this policy also presents a risk because it delegates the enforcement of which entities can assume the role solely to a mutable property of their organization. Any change to the account structure, accidental or malicious, risks the unintended side effect of creating a new access path.
+From a security standpoint, this policy also presents a risk because it delegates the enforcement of which entities can assume the role solely to a mutable property of their organization. Any change to the OU structure, accidental or malicious, risks the unintended side effect of creating a new access path.
 
 ### Condition Keys
 
@@ -126,7 +126,7 @@ Policy allowing any access from principals in the OU with ID `ou-ab12-22222222` 
 
 In an AWS Organization, CloudFormation stacks can be centrally deployed across multiple member accounts from the management account using the CloudFormation StackSets feature. The stack configuration controls which AWS accounts the stack is deployed in via "targets," which operate based on account or Organizational Unit ID.
 
-The [DeploymentTargets](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeploymentTargets.html) property of the CloudFormation StackSet can be set to any combination of account IDs and OU IDs. When an account is targeted, either directly via its ID, or indirectly via one of its parent OUs, the stack is deployed to that account.
+The [DeploymentTargets](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeploymentTargets.html) property of the CloudFormation StackSet can be set to any combination of account IDs and OU IDs. When an account is targeted, either directly via its ID, or indirectly via one of its parent OUs, the stack may be deployed to that account.
 
 The exact behavior of a stack deployment is determined by a combination of the stack's [automatic deployment and retention settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-manage-auto-deployment.html):
 
@@ -167,7 +167,7 @@ Changing an account or OU parent ID is straightforward; a single configuration o
 
 However, for operationally-sensitive accounts, the challenges described above require a bit more investment in operational risk management. There are some steps developers can take to reduce the risk of these changes:
 
-* If possible, consider temporarily applying the same SCPs attached to the target OU to the original OU or account to observe potential impacts to the application in a controlled environment
+* If possible, consider temporarily applying the same SCPs attached to the new OU to the original OU or account to observe potential impacts to the application in a controlled environment
 * While not ideal, you can also consider temporarily moving the account or OU for increasing periods of time while monitoring for `AccessDenied` errors in CloudTrail. For example, you could update the `parentId` to the new OU for 15 seconds, revert, monitor, update again for 5 minutes, etc. based on your risk tolerance.
     * Note: this strategy may result in in-scope CloudFormation StackSets being deployed and deleted in rapid succession which could cause other unintended side effects.
 * Consider using the checklist below to manually evaluate the impact of an account/OU move.
@@ -183,7 +183,7 @@ Following an account or OU move, errors will most likely appear in the following
 ## Reverting
 Reverting the move involves simply changing the `parentId` back to the original parent. The majority of the above policy considerations should instantly revert back to how they were applied prior to the move. However, CloudFormation StackSets may need to be reviewed for possible cleanup, depending on their auto-deploy and retention settings.
 
-### A Warning About StackSets
+### A Warning About StackSets with IAM Roles
 
 Many organizations leverage StackSets to deploy shared resources, such as IAM roles, used by monitoring or security tools. Its important to note that when a role is deleted and recreated, some AWS services, such as KMS, may no longer trust the new role, even if it has the same name and ARN (the policy, depending on how it is written, may reference the now-deleted role via an `AROA` value). This is a security feature, but can cause complications when recovering stacks that have been deleted due to an account move. You can read more about this edge case [here](https://www.lastweekinaws.com/blog/the-sneaky-weakness-behind-aws-managed-kms-keys/).
 
