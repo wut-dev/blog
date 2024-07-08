@@ -10,13 +10,17 @@ description: Operational and security considerations when moving AWS accounts an
 excerpt_separator: <!--more-->
 ---
 
+_This post explores the potential implications of moving an AWS account or Organizational Unit (OU) to another OU within the same Organization, including impacts to SCP policy inheritance, CloudFormation StackSet deployments, IAM policy conditions, RAM shares, and Control Tower enrollments._
+
+<!--more-->
+
+<br/>
+
 ![Moving an AWS Account](/assets/img/move-aws-account.png "Moving an AWS Account")
 
 # Background
 
 AWS Organizations enables the management and organization of AWS accounts via a hierarchy of organizational units (OUs). OUs are essentially directories in a tree structure and accounts can reside in OUs up to five nested levels deep. These OUs also allow for policies (Service Control Policies - SCPs) to be applied to groups of accounts under the OU tree.
-
-<!--more-->
 
 As an example, a company using AWS Organizations may group their accounts under `dev`, `stage`, and `prod` OUs and use those groupings to apply different policies based on the environment type. Alternatively, OUs could reflect the organization of the business, such as "engineering," "security," "finance," and "product" groups. These concepts can even be combined; an OU tree could look like: `Root > Product > Staging > Account A`.
 
