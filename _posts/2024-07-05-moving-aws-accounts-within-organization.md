@@ -209,4 +209,4 @@ The checklist below, while not exhaustive, contains a set of checks that can be 
 
 ----
 
-_This post was published by [wut.dev](https://wut.dev), a platform for managing AWS Organizations and Policies_.
+_This post was published by [wut.dev](https://wut.dev), a client-side platform for viewing, managing, and debugging AWS security policies, controls, and access issues related to AWS Organization Service Control Policies (SCPs), IAM policies, and resource policies._
