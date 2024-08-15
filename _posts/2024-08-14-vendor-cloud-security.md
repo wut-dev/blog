@@ -6,11 +6,11 @@ thumbnail: assets/img/vendor-security-bar.png
 image: assets/img/vendor-security-bar.png
 tags: dev
 author: fuller
-description: An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting, and adhering to, cloud security best practices for both vendors and customers.
+description: An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to, cloud security best practices for both vendors and customers.
 excerpt_separator: <!--more-->
 ---
 
-_An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting, and adhering to, cloud security best practices for both vendors and customers._
+_An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to, cloud security best practices for both vendors and customers._
 
 <!--more-->
 
@@ -20,14 +20,14 @@ _An opinionated, critical look at the state of security of vendor cloud integrat
 
 The state of security of vendor cloud integrations is dreadful.
 
-In my ~decade of working with cloud environments, I've seen all sides of the vendor/customer relationship; as a vendor, I've built products that integrate with customer's clouds, and as a customer I've integrated third party vendors and SaaS products. In this time, I've been routinely surprised by the number of vendors who, despite their "we take security seriously" mantras, seem to have opaque, questionable, or even downright insecure, practices surrounding their integrations into customer cloud environments.
+In my ~decade of working with cloud environments, I've seen all sides of the vendor/customer relationship; as a vendor, I've built products that integrate with customers' clouds, and as a customer I've integrated third-party vendors and SaaS products. In this time, I've been routinely surprised by the number of vendors who, despite their "we take security seriously" mantras, seem to have opaque, questionable, or even downright insecure, practices surrounding their integrations into customer cloud environments.
 
 To state the obvious, having access to a customer's cloud environment, in any form, is a position of tremendous trust and responsibility. A key element of that responsibility is demonstrating a commitment to cloud security best practices and integration practices that will safeguard not only the data the customer has directly shared, but the rest of their environment as well.
 
-Frankly, I feel the cloud vendor industry needs to be held to a higher bar. A plethora of insecure practices seem to still prevail, despite years of more secure alternatives, and I believe that it's up to customers to push back.
+Frankly, I believe the cloud vendor industry needs to be held to a higher bar. A plethora of insecure practices seem to still prevail, despite years of more secure alternatives, and I believe that it's up to customers to push back.
 
 To be clear, both parties in the relationship bear responsibility:
-* Customers are responsible for choosing the third party vendors they integrate with (and reviewing the security of those integrations)
+* Customers are responsible for choosing the third-party vendors they integrate with (and reviewing the security of those integrations)
 * Vendors are responsible for adhering to cloud security best practices when integrating with customer's cloud environments and providing safe configuration options for those customers
 
 # No, I Won't Email You My Access Keys
@@ -36,14 +36,14 @@ Let's start with a simple example. If you, as a vendor, are asking your customer
 
 * You're not running your infrastructure in AWS (which is fine) but want to connect to customers who are, and aren't willing to spin up your own account (or leverage options like [IAM Roles Anywhere](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html)) to facilitate the connectivity
 * You don't have experience with these kinds of cloud security best practices
-* You do, and decided to ignore them
+* You do, but decided to ignore them
 * You do, but think you can provide your own safer alternative (do you roll your own crypto too?)
 
 None of these are good! At a minimum, it forces me, the customer, to take on technical security debt. At worst, it gives a sneak preview into the _rest_ of your security practices, which likely follow a similar pattern. This is where the relationship should end[[1](#footnotes)]. Please come back when you support IAM roles.
 
 # It Gets Worse
 
-Cloud integrations can be quite complex, involving numerous managed services, so I won't attempt to enumerate every possible security faux pas here. But to give some insight into the kinds of things I've seen:
+Cloud integrations can be quite complex, involving numerous managed services, so I won't attempt to enumerate every possible security faux pas. But to give some insight into the kinds of things I've seen:
 
 * "We don't really have a diagram, or list, of cloud resources we use, or how we connect to your environment. But our sales team can walk you through our SOC 2 certification."
 * "We need the `iam:AttachRolePolicy` permission because we use it to update our own permissions from time to time to facilitate new features."
@@ -53,7 +53,7 @@ Cloud integrations can be quite complex, involving numerous managed services, so
 
 # Questionnaires Don't Help
 
-Some enterprising security teams have attempted to get ahead of these problems by... throwing a bunch of questions in a spreadsheet and then asking vendors to fill them out. But here's a dirty (well-known at this point?) industry secret: the people responding to those spreadsheets are often 1) not the vendor's security team 2) not even a technical team and 3) incentivized to move the deal along as quickly as possible by clicking whatever the most positive response is. "How do you properly safeguard service secrets?" "Sure, sure, yeah we do that using industry best practices..."
+Some enterprising security teams have attempted to get ahead of these problems by... throwing a bunch of questions in a spreadsheet and then asking vendors to fill them out. But here's a dirty (well-known at this point?) industry secret: the people responding to those spreadsheets are often 1) not the vendor's security team, 2) not even a technical team, and 3) incentivized to move the deal along as quickly as possible by clicking whatever the most positive response is. "How do you properly safeguard service secrets?" "Sure, sure, yeah we do that using industry best practices..."
 
 Also, while some companies certainly try, listing every possible cloud security concern and misconfiguration in a spreadsheet is a colossal waste of time. There are 200+ services in AWS alone, each with their own integration options. That one misconfiguration hidden in tab 6, cell BZ3031 won't matter. Much has been written about the plague of security vendor questionnaires; I won't waste time beating a dead horse here.
 
@@ -96,13 +96,13 @@ This documentation should ideally be public, but at the very least available _be
 
 ## Start Off on the Right Foot
 
-The proverbial doorway to your product is the initial integration - how your product connects to a customer's cloud environment. Fortunately, most cloud providers have provided clear best practices for third party connectivity. Unfortunately, many vendors decide to do their own thing instead.
+The proverbial doorway to your product is the initial integration - how your product connects to a customer's cloud environment. Fortunately, most cloud providers have provided clear best practices for third-party connectivity. Unfortunately, many vendors decide to do their own thing instead.
 
 ### Initial Connectivity
 
 Nothing makes me more impressed with (and likely to use) a vendor than one that simply says the following:
 
-> Our application connects to your cloud via a third party cross-account AWS IAM role. We generate a unique, external ID for use in the trust relationship and the IAM policy attached to the role has the following permissions...
+> Our application connects to your cloud via a third-party cross-account AWS IAM role. We generate a unique, external ID for use in the trust relationship and the IAM policy attached to the role has the following permissions...
 
 When I read this, I know that you know (more or less) what you're doing. You'd be surprised how many vendors needlessly complicate, or completely botch, this step by:
 * Asking for access keys and secrets.
@@ -155,7 +155,7 @@ Some rules of thumb I like to follow (examples using AWS IAM):
 * Never use admin, or global access (`AdministratorAccess`, `*.*`, etc.) or similarly-broad policies (e.g., `PowerUserAccess`)
 * Write permissions should be tightly scoped to both the action (e.g., `s3:CreateBucket`) and the resource (e.g., `arn:aws:s3:::example-bucket`)
 * Read permissions should be as tightly scoped as possible (I'm slightly more lenient with `lambda:List*`, but only if you define a resource, or wildcard string, like `arn:aws:lambda:us-east-1:123456789101:function:vendor-name-*`, or really need to see all the Lambdas in my account)
-* Permissions related to identity should be used _very_ sparingly, scoped to a resource, and should be accompanied by very clear explanations of why they're required
+* Permissions related to identity should be used _very_ sparingly, scoped to a resource, and accompanied by clear explanations of why they’re required
     * Ex: `iam:CreateRole`, `iam:CreatePolicyVersion`, `s3:PutBucketPolicy`, etc.
     * Review [this article](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/) about privilege escalation methods and make sure your policy doesn't include any of these.
 * Be careful when using cloud provider managed policies
@@ -218,7 +218,7 @@ Although vendors provide valuable services in the cloud ecosystem, they must tak
 
 #### Footnotes
 
-_[1] I am, of course, being dramatic for effect. Yes, there are business requirements, and security exists to enable the business while mitigating risk. This is an opportunity for security teams to surface those risks to leadership. If the business can't go on without this vendor, and they only support keys, then you've said your piece; it's now your job to provide mitigating controls._
+_[1] I am, of course, being dramatic for effect. Yes, there are business requirements, and security exists to enable the business while mitigating risk. This is an opportunity for security teams to surface those risks to leadership. If the business can't proceed without this vendor, and they only support keys, then you've said your piece; it's now your job to provide mitigating controls._
 
 _[2] [AWS Confused Deputy Problem](https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html)_
 
