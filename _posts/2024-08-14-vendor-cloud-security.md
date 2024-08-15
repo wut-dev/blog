@@ -6,11 +6,11 @@ thumbnail: assets/img/vendor-security-bar.png
 image: assets/img/vendor-security-bar.png
 tags: dev
 author: fuller
-description: An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to, cloud security best practices for both vendors and customers.
+description: An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to cloud security best practices for both vendors and customers.
 excerpt_separator: <!--more-->
 ---
 
-_An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to, cloud security best practices for both vendors and customers._
+_An opinionated, critical look at the state of security of vendor cloud integrations, along with recommendations for documenting and adhering to cloud security best practices for both vendors and customers._
 
 <!--more-->
 
