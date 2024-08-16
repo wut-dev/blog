@@ -107,7 +107,8 @@ Nothing makes me more impressed with (and likely to use) a vendor than one that 
 When I read this, I know that you know (more or less) what you're doing. You'd be surprised how many vendors needlessly complicate, or completely botch, this step by:
 * Asking for access keys and secrets.
 * Using `*` in the trust relationship.
-* Using `:root` in the trust relationship (use a specific IAM principal instead).
+* ~~Using `:root` in the trust relationship (use a specific IAM principal instead).~~
+    * Edit: after some community discussion about this, I removed this point. You can read more about trusting accounts, rather than principals [here](https://ben11kehoe.medium.com/cross-account-role-trust-policies-should-trust-aws-accounts-not-roles-32737dfeaa03).
 * Not using an external ID in the trust relationship (or allowing the customer to provide their own).
 * Allowing their application to dynamically update the trust relationship.
 
